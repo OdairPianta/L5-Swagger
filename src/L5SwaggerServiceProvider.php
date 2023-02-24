@@ -4,35 +4,37 @@ namespace L5Swagger;
 
 use Illuminate\Support\ServiceProvider;
 use L5Swagger\Console\GenerateDocsCommand;
+use L5Swagger\Console\GenerateModelDocsCommand;
 
-class L5SwaggerServiceProvider extends ServiceProvider
-{
+class L5SwaggerServiceProvider extends ServiceProvider {
     /**
      * Bootstrap the application events.
      *
      * @return void
      */
-    public function boot()
-    {
-        $viewPath = __DIR__.'/../resources/views';
+    public function boot() {
+        $viewPath = __DIR__ . '/../resources/views';
         $this->loadViewsFrom($viewPath, 'l5-swagger');
 
         // Publish a config file
-        $configPath = __DIR__.'/../config/l5-swagger.php';
+        $configPath = __DIR__ . '/../config/l5-swagger.php';
         $this->publishes([
             $configPath => config_path('l5-swagger.php'),
         ], 'config');
 
         //Publish views
         $this->publishes([
-            __DIR__.'/../resources/views' => config('l5-swagger.defaults.paths.views'),
+            __DIR__ . '/../resources/views' => config('l5-swagger.defaults.paths.views'),
         ], 'views');
 
         //Include routes
-        $this->loadRoutesFrom(__DIR__.'/routes.php');
+        $this->loadRoutesFrom(__DIR__ . '/routes.php');
 
         //Register commands
-        $this->commands([GenerateDocsCommand::class]);
+        $this->commands([
+            GenerateDocsCommand::class,
+            GenerateModelDocsCommand::class,
+        ]);
     }
 
     /**
@@ -40,13 +42,16 @@ class L5SwaggerServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
-    {
-        $configPath = __DIR__.'/../config/l5-swagger.php';
+    public function register() {
+        $configPath = __DIR__ . '/../config/l5-swagger.php';
         $this->mergeConfigFrom($configPath, 'l5-swagger');
 
         $this->app->singleton('command.l5-swagger.generate', function ($app) {
             return $app->make(GenerateDocsCommand::class);
+        });
+
+        $this->app->singleton('command.l5-swagger.generate_model', function ($app) {
+            return $app->make(GenerateModelDocsCommand::class);
         });
 
         $this->app->bind(Generator::class, function ($app) {
@@ -65,8 +70,7 @@ class L5SwaggerServiceProvider extends ServiceProvider
      *
      * @return array
      */
-    public function provides()
-    {
+    public function provides() {
         return [
             'command.l5-swagger.generate',
         ];
